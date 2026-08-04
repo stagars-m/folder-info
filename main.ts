@@ -7,6 +7,8 @@ const EXPLORER_SELECTOR =
 const FOLDER_SELECTOR = ".nav-folder-title";
 const CONTENT_SELECTOR = ".nav-folder-title-content";
 const INFO_CLASS = "folder-info-count";
+const LEGACY_NAME_CLASS = "folder-info-name";
+const LEGACY_CONTENT_CLASS = "folder-info-content";
 const OWNED_CLASS = "folder-info-owned";
 const SHADE_CLASS = "folder-info-shaded";
 const NON_BREAKING_SPACE = "\u00a0";
@@ -199,6 +201,46 @@ class FolderInfoPlugin extends Plugin {
     return "";
   }
 
+  static unwrapElement(element) {
+    if (!(element instanceof HTMLElement) || !element.parentElement) return;
+
+    const parent = element.parentElement;
+    while (element.firstChild) {
+      parent.insertBefore(element.firstChild, element);
+    }
+    element.remove();
+  }
+
+  static cleanLegacyMarkup(title, preserveDirectCounter = true) {
+    if (!(title instanceof HTMLElement)) return null;
+
+    const content = title.querySelector(CONTENT_SELECTOR);
+    let directCounter = null;
+
+    title.querySelectorAll(`.${INFO_CLASS}`).forEach((counter) => {
+      const isDirect = counter.parentElement === title;
+      if (
+        preserveDirectCounter &&
+        isDirect &&
+        directCounter === null &&
+        counter instanceof HTMLElement
+      ) {
+        directCounter = counter;
+        return;
+      }
+      counter.remove();
+    });
+
+    if (content instanceof HTMLElement) {
+      content
+        .querySelectorAll(`.${LEGACY_NAME_CLASS}`)
+        .forEach((name) => FolderInfoPlugin.unwrapElement(name));
+      content.classList.remove(LEGACY_CONTENT_CLASS);
+    }
+
+    return directCounter;
+  }
+
   static mutationTouchesExplorer(mutations) {
     const records = Array.isArray(mutations) ? mutations : Array.from(mutations ?? []);
 
@@ -224,6 +266,10 @@ class FolderInfoPlugin extends Plugin {
   async onload() {
     this.settings = FolderInfoPlugin.normalizeSettings(await this.loadData());
     this.addSettingTab(new FolderInfoSettingTab(this.app, this));
+
+    // Purge markup left by older plugin versions before rendering new counters.
+    // This makes hot updates and BRAT reinstalls idempotent.
+    this.restoreNativeFolders();
 
     this.observer = new MutationObserver((mutations) => {
       if (FolderInfoPlugin.mutationTouchesExplorer(mutations)) {
@@ -356,6 +402,11 @@ class FolderInfoPlugin extends Plugin {
     const content = title.querySelector(CONTENT_SELECTOR);
     if (!(content instanceof HTMLElement)) return;
 
+    // v1.0.3 placed its counter inside the native title content and wrapped
+    // the folder name. Remove that legacy structure before adding one current
+    // counter as a direct child of the folder title.
+    let info = FolderInfoPlugin.cleanLegacyMarkup(title, true);
+
     const selected = FolderInfoPlugin.selectCounts(
       this.countIndex.get(path),
       this.settings.countMode,
@@ -379,10 +430,6 @@ class FolderInfoPlugin extends Plugin {
       return;
     }
 
-    let info = Array.from(title.children).find(
-      (child) => child instanceof HTMLElement && child.classList.contains(INFO_CLASS),
-    );
-
     if (!(info instanceof HTMLElement)) {
       info = document.createElement("span");
       info.className = INFO_CLASS;
@@ -404,17 +451,22 @@ class FolderInfoPlugin extends Plugin {
   clearFolderInfo(title) {
     if (!(title instanceof HTMLElement)) return;
 
-    Array.from(title.children)
-      .filter(
-        (child) => child instanceof HTMLElement && child.classList.contains(INFO_CLASS),
-      )
-      .forEach((element) => element.remove());
-
+    // Remove current counters, duplicate counters, and the nested counter/name
+    // wrappers used by v1.0.3. Repeated cleanup is safe.
+    FolderInfoPlugin.cleanLegacyMarkup(title, false);
     title.classList.remove(OWNED_CLASS, SHADE_CLASS);
   }
 
   restoreNativeFolders() {
-    this.getFolderTitles().forEach((title) => this.clearFolderInfo(title));
+    const titles = new Set(this.getFolderTitles());
+
+    document.querySelectorAll(FOLDER_SELECTOR).forEach((title) => titles.add(title));
+    document.querySelectorAll(`.${INFO_CLASS}`).forEach((counter) => {
+      const title = counter.closest?.(FOLDER_SELECTOR);
+      if (title) titles.add(title);
+    });
+
+    titles.forEach((title) => this.clearFolderInfo(title));
   }
 }
 

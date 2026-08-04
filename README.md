@@ -28,6 +28,7 @@ Examples:
 ## Reliability
 
 - Counters are appended without moving Obsidian's native folder-name nodes.
+- Legacy counters and wrappers from earlier versions are removed automatically, preventing duplicate labels after updates.
 - A non-breaking space guarantees visible separation between the name and counter.
 - Counts are indexed from all loaded vault files and folders, including empty folders.
 - The plugin refreshes folder rows when File Explorer content is mounted, expanded, renamed, created, or deleted.

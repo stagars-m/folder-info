@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.5
+
+- Remove duplicate counters and folder-name wrappers left in the File Explorer DOM by older Folder Info versions.
+- Make startup, refresh, disable, and repeated updates idempotent: each folder row can contain at most one current counter.
+- Preserve the smaller counter font, reliable spacing, broad folder-row detection, and 0.30 shaded opacity from 1.0.4.
+
 ## 1.0.4
 
 - Fix missing separation between folder names and counters with a literal non-breaking space.

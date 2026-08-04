@@ -251,17 +251,51 @@ class FakeElement {
     this.dataset = {};
     this.attributes = new Map();
     this.classList = new FakeClassList(classes);
-    this.className = classes.join(" ");
+    this._className = classes.join(" ");
     this.textContent = "";
   }
+  get className() {
+    return this._className;
+  }
+  set className(value) {
+    this._className = String(value);
+    this.classList = new FakeClassList(
+      this._className.split(/\s+/).filter(Boolean),
+    );
+  }
+  get childNodes() {
+    return this.children;
+  }
+  get firstChild() {
+    return this.children[0] ?? null;
+  }
   appendChild(child) {
+    if (child.parentElement) {
+      child.parentElement.children = child.parentElement.children.filter(
+        (candidate) => candidate !== child,
+      );
+    }
     child.parentElement = this;
     this.children.push(child);
     return child;
   }
+  insertBefore(child, reference) {
+    if (child.parentElement) {
+      child.parentElement.children = child.parentElement.children.filter(
+        (candidate) => candidate !== child,
+      );
+    }
+    child.parentElement = this;
+    const index = reference ? this.children.indexOf(reference) : -1;
+    if (index < 0) this.children.push(child);
+    else this.children.splice(index, 0, child);
+    return child;
+  }
   remove() {
     if (!this.parentElement) return;
-    this.parentElement.children = this.parentElement.children.filter((child) => child !== this);
+    this.parentElement.children = this.parentElement.children.filter(
+      (child) => child !== this,
+    );
     this.parentElement = null;
   }
   setAttribute(name, value) {
@@ -271,19 +305,41 @@ class FakeElement {
   getAttribute(name) {
     return this.attributes.has(name) ? this.attributes.get(name) : null;
   }
-  querySelector(selector) {
+  matches(selector) {
+    if (selector.startsWith(".")) {
+      return this.classList.contains(selector.slice(1));
+    }
+    return false;
+  }
+  querySelectorAll(selector) {
     if (selector.includes("input") || selector.includes("textarea") || selector.includes("contenteditable")) {
-      return null;
+      return [];
     }
-    if (selector === ".nav-folder-title-content") {
-      return this.children.find((child) => child.classList.contains("nav-folder-title-content")) ?? null;
-    }
-    return null;
+
+    const matches = [];
+    const visit = (element) => {
+      for (const child of element.children) {
+        if (child.matches(selector)) matches.push(child);
+        visit(child);
+      }
+    };
+    visit(this);
+    return matches;
+  }
+  querySelector(selector) {
+    return this.querySelectorAll(selector)[0] ?? null;
   }
   closest(selector) {
     let cursor = this;
     while (cursor) {
-      if (selector === ".nav-folder[data-path]" && cursor.classList.contains("nav-folder") && cursor.getAttribute("data-path") !== null) {
+      if (
+        selector === ".nav-folder[data-path]" &&
+        cursor.classList.contains("nav-folder") &&
+        cursor.getAttribute("data-path") !== null
+      ) {
+        return cursor;
+      }
+      if (selector.startsWith(".") && cursor.classList.contains(selector.slice(1))) {
         return cursor;
       }
       cursor = cursor.parentElement;
@@ -373,5 +429,95 @@ test("applyFolderInfo still decorates a visible folder missing from the count in
   } finally {
     global.HTMLElement = previousHTMLElement;
     global.document = previousDocument;
+  }
+});
+
+
+test("migrates v1.0.3 nested markup and leaves exactly one counter", () => {
+  const previousHTMLElement = global.HTMLElement;
+  const previousDocument = global.document;
+  global.HTMLElement = FakeElement;
+  global.document = { createElement: (tag) => new FakeElement(tag) };
+
+  try {
+    const title = new FakeElement("div", ["nav-folder-title", "folder-info-owned"]);
+    title.setAttribute("data-path", "Aider");
+    const content = title.appendChild(
+      new FakeElement("div", ["nav-folder-title-content", "folder-info-content"]),
+    );
+    const legacyName = content.appendChild(
+      new FakeElement("span", ["folder-info-name"]),
+    );
+    const nativeName = legacyName.appendChild(new FakeElement("span", ["native-name"]));
+    nativeName.textContent = "Aider";
+    const legacyCounter = content.appendChild(
+      new FakeElement("span", ["folder-info-count"]),
+    );
+    legacyCounter.textContent = "(1 file, 0 folders)";
+
+    const plugin = Object.create(PluginClass.prototype);
+    plugin.settings = {
+      countMode: "recursive",
+      showFiles: true,
+      showFolders: true,
+      showZeroCounts: true,
+      shadeFolderInfo: true,
+    };
+    plugin.countIndex = new Map([
+      [
+        "Aider",
+        {
+          directFiles: 1,
+          directFolders: 0,
+          recursiveFiles: 1,
+          recursiveFolders: 0,
+        },
+      ],
+    ]);
+
+    plugin.applyFolderInfo(title);
+    plugin.applyFolderInfo(title);
+
+    const counters = title.querySelectorAll(".folder-info-count");
+    assert.equal(counters.length, 1, "refreshes must never duplicate counters");
+    assert.equal(counters[0].parentElement, title, "current counter must be a direct title child");
+    assert.equal(counters[0].textContent, "\u00a0(1\u00a0file, 0\u00a0folders)");
+    assert.equal(content.querySelectorAll(".folder-info-count").length, 0);
+    assert.equal(content.querySelectorAll(".folder-info-name").length, 0);
+    assert.equal(content.classList.contains("folder-info-content"), false);
+    assert.equal(content.children[0], nativeName, "native name node must be restored");
+  } finally {
+    global.HTMLElement = previousHTMLElement;
+    global.document = previousDocument;
+  }
+});
+
+test("clearFolderInfo removes current and legacy counters idempotently", () => {
+  const previousHTMLElement = global.HTMLElement;
+  global.HTMLElement = FakeElement;
+
+  try {
+    const title = new FakeElement("div", ["nav-folder-title", "folder-info-owned", "folder-info-shaded"]);
+    const content = title.appendChild(
+      new FakeElement("div", ["nav-folder-title-content", "folder-info-content"]),
+    );
+    const legacyName = content.appendChild(new FakeElement("span", ["folder-info-name"]));
+    const nativeName = legacyName.appendChild(new FakeElement("span", ["native-name"]));
+    content.appendChild(new FakeElement("span", ["folder-info-count"]));
+    title.appendChild(new FakeElement("span", ["folder-info-count"]));
+    title.appendChild(new FakeElement("span", ["folder-info-count"]));
+
+    const plugin = Object.create(PluginClass.prototype);
+    plugin.clearFolderInfo(title);
+    plugin.clearFolderInfo(title);
+
+    assert.equal(title.querySelectorAll(".folder-info-count").length, 0);
+    assert.equal(title.querySelectorAll(".folder-info-name").length, 0);
+    assert.equal(content.classList.contains("folder-info-content"), false);
+    assert.equal(content.children[0], nativeName);
+    assert.equal(title.classList.contains("folder-info-owned"), false);
+    assert.equal(title.classList.contains("folder-info-shaded"), false);
+  } finally {
+    global.HTMLElement = previousHTMLElement;
   }
 });

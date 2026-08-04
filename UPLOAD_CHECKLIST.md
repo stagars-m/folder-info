@@ -1,22 +1,23 @@
-# Upload checklist for v1.0.4
+# Upload checklist for v1.0.5
 
-After uploading, the GitHub **Code** page must visibly show all of these files at the repository root:
+Upload every file from the repository package to the root of the GitHub repository. Before creating the release, the GitHub Code page must visibly show:
 
-- `README.md`
-- `LICENSE`
 - `main.ts`
+- `main.js`
 - `build.mjs`
 - `package.json`
 - `package-lock.json`
 - `manifest.json`
 - `styles.css`
+- `README.md`
+- `LICENSE`
 - `.github/workflows/release.yml`
 
-Before creating the release, verify from a clean clone:
+Verify the tagged commit in a clean checkout:
 
 ```bash
 npm ci
 npm run check
 ```
 
-Create release `1.0.4` only after these files are present in the commit referenced by the release tag. Prefer the included GitHub Actions release workflow so `main.js` and `styles.css` receive artifact attestations.
+Create release `1.0.5` through the included GitHub Actions workflow so `main.js` and `styles.css` receive artifact attestations. Publish the workflow-created draft release without replacing its generated assets.
