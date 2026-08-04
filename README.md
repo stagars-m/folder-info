@@ -13,7 +13,7 @@ Examples:
 - Recursive totals or direct-child totals
 - Independent file and folder count toggles
 - Optional zero counts
-- Optional light-gray shading for the counter
+- Optional 30%-opacity shading for the counter
 - Live refresh after create, delete, and rename operations
 - Preserves Obsidian's normal folder rename interface
 
@@ -22,8 +22,15 @@ Examples:
 - Count all descendants or direct children
 - Show or hide file counts
 - Show or hide folder counts
-- Shade the folder counter in a lighter color
+- Shade the folder counter at 30% opacity
 - Show or hide zero counts
+
+## Reliability
+
+- Counters are appended without moving Obsidian's native folder-name nodes.
+- A non-breaking space guarantees visible separation between the name and counter.
+- Counts are indexed from all loaded vault files and folders, including empty folders.
+- The plugin refreshes folder rows when File Explorer content is mounted, expanded, renamed, created, or deleted.
 
 ## Privacy and security
 

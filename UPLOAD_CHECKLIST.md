@@ -1,23 +1,22 @@
-# Upload checklist for v1.0.3
+# Upload checklist for v1.0.4
 
-The previous review commit was missing the nested `src/` and `scripts/` directories. Version 1.0.3 places the two required files at the repository root to make incomplete uploads obvious.
+After uploading, the GitHub **Code** page must visibly show all of these files at the repository root:
 
-After uploading, the GitHub **Code** page must visibly show all of these files at the top level:
-
+- `README.md`
+- `LICENSE`
 - `main.ts`
 - `build.mjs`
 - `package.json`
 - `package-lock.json`
 - `manifest.json`
 - `styles.css`
-- `LICENSE`
+- `.github/workflows/release.yml`
 
-Before creating the release, open GitHub's web editor or clone the repository and verify:
+Before creating the release, verify from a clean clone:
 
 ```bash
 npm ci
-npm run build
-npm test
+npm run check
 ```
 
-Create release `1.0.3` only after the files above are present in the commit that the tag will reference.
+Create release `1.0.4` only after these files are present in the commit referenced by the release tag. Prefer the included GitHub Actions release workflow so `main.js` and `styles.css` receive artifact attestations.

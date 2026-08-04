@@ -1,6 +1,6 @@
 {
   "name": "folder-info",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Obsidian plugin that shows separate file and folder counts in the native File Explorer.",
   "main": "main.js",
   "type": "commonjs",

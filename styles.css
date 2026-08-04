@@ -1,32 +1,31 @@
 /* Folder Info changes File Explorer presentation only. */
 
-.folder-info-content {
+.nav-folder-title.folder-info-owned {
   display: flex;
   align-items: baseline;
   min-width: 0;
-  overflow: hidden;
 }
 
-.folder-info-name {
-  flex: 0 1 auto;
-  min-width: 0;
+.nav-folder-title.folder-info-owned .nav-folder-title-content {
+  flex: 0 1 auto !important;
+  min-width: 0 !important;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.folder-info-count {
-  flex: 0 0 auto;
-  margin-left: 0.38em;
+.nav-folder-title.folder-info-owned > .folder-info-count {
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
   color: inherit;
   opacity: 1;
   font-size: var(--font-ui-smaller);
-  white-space: nowrap;
+  white-space: pre;
 }
 
-
 /* Optional muted presentation controlled by the Shade folder info setting. */
-.folder-info-shaded .folder-info-count {
+.nav-folder-title.folder-info-shaded > .folder-info-count {
   color: var(--text-muted);
   opacity: 0.30;
 }

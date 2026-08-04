@@ -1,22 +1,14 @@
 # Changelog
 
+## 1.0.4
+
+- Fix missing separation between folder names and counters with a literal non-breaking space.
+- Fix missing counters on some folders by indexing all loaded vault entries rather than relying on class identity.
+- Detect folder paths from both title and parent DOM attributes.
+- Detect folder rows across all native File Explorer containers and refresh when explorer content is mounted dynamically.
+- Stop wrapping or moving Obsidian's native folder-name nodes.
+- Set shaded counter opacity to 0.30.
+
 ## 1.0.3
 
-- Add a **Shade folder info** setting, enabled by default.
-- Let users switch counters between muted gray and the normal folder-name color.
-- Keep count scope, file and folder toggles, zero counts, live refresh, and rename behavior unchanged.
-
-## 1.0.2
-
-- Moved the complete source to root-level `main.ts` so automated review can detect it reliably.
-- Moved the build script to root-level `build.mjs` so clean build verification cannot miss a nested script.
-- Kept a dependency-free, lockfile-backed deterministic build.
-- Retained the plugin's existing runtime behavior.
-
-## 1.0.1
-
-- Added source, a lockfile, an MIT license, and an attested release workflow.
-
-## 1.0.0
-
-- Initial release.
+- Add an optional Shade folder info setting.
