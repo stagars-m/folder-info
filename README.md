@@ -1,93 +1,64 @@
 # Folder Info
 
-A small Obsidian plugin that shows separate file and folder counts beside every folder in the native File Explorer.
+Folder Info adds separate file and folder counts beside each folder in Obsidian's native File Explorer.
 
 ```text
 Research (44 files, 16 folders)
-Archive (3 files, 0 folders)
-Empty (0 files, 0 folders)
 ```
-
-The default count includes all descendants. You can switch to direct children in the plugin settings.
 
 ## Features
 
-- Separate file and folder totals
-- Recursive or direct-child counting
-- Counts every file type exposed by Obsidian, including Markdown notes and attachments
-- Updates after files or folders are created, deleted, or renamed
-- Preserves Obsidian's native folder rename field
-- Removes every added label when the plugin is disabled
-- Works on desktop and mobile without Node.js or Electron APIs
+- Counts files and folders separately.
+- Supports recursive totals or direct-child totals.
+- Can show only files, only folders, or both.
+- Can hide zero counts.
+- Updates after files or folders are created, deleted, or renamed.
+- Keeps the normal inline folder rename field unchanged.
 
-## Settings
+## Privacy and security
 
-- **Count scope**: all descendants or direct children
-- **Show file count**
-- **Show folder count**
-- **Show zero counts**
+Folder Info:
 
-## Security and privacy
+- makes no network requests;
+- collects no telemetry;
+- does not read note or attachment contents;
+- does not write to vault files;
+- does not use Node.js or Electron APIs at runtime;
+- stores only four local display preferences.
 
-Folder Info is intentionally narrow:
+The plugin reads Obsidian's in-memory vault tree to count `TFile` and `TFolder` objects and changes only File Explorer presentation.
 
-- No network access
-- No telemetry
-- No note-content or attachment-content reads
-- No vault file writes
-- No Node.js or Electron APIs
-- No dynamic code execution
-- No runtime dependencies
-- Stores only its four local display preferences
+## Source and reproducible build
 
-The plugin reads Obsidian's in-memory vault tree and changes File Explorer display markup only.
-
-## Counting scope
-
-Folder Info uses Obsidian's Vault API. It counts files and folders that Obsidian exposes inside the vault. Hidden configuration directories such as `.obsidian` are outside its normal count.
-
-## Install with BRAT
-
-1. Create a public GitHub repository named `folder-info`.
-2. Upload the contents of this repository package.
-3. Create a GitHub release tagged exactly `1.0.0`.
-4. Attach these files individually from the release-assets package:
-   - `main.js`
-   - `manifest.json`
-   - `styles.css`
-5. Add the repository URL through BRAT.
-6. Enable **Folder Info** under Community plugins.
-
-## Manual install
-
-Copy these files into:
-
-```text
-<Your Vault>/.obsidian/plugins/folder-info/
-```
-
-```text
-main.js
-manifest.json
-styles.css
-```
-
-Reload Obsidian, then enable the plugin.
-
-## Scope and compatibility
-
-The plugin targets Obsidian's native File Explorer. It does not modify alternative explorer views supplied by other plugins.
-
-The File Explorer DOM classes and `data-path` attribute are not part of Obsidian's public plugin API. A future Obsidian interface change may require a selector update. The plugin does not patch Obsidian internals.
-
-## Build and verify
-
-Requires Node.js 18 or newer. The project has no npm dependencies.
+The complete source is in [`src/main.js`](src/main.js). The build is deterministic and has no runtime or build dependencies.
 
 ```bash
+npm ci
 npm run check
 ```
 
+`package-lock.json` is committed so automated review can reproduce the build. GitHub releases are created by `.github/workflows/release.yml`, which builds from the tagged commit and generates GitHub artifact attestations for `main.js` and `styles.css`.
+
+## Installation
+
+### BRAT
+
+Add:
+
+```text
+https://github.com/stagars-m/folder-info
+```
+
+### Manual
+
+Copy `main.js`, `manifest.json`, and `styles.css` from a GitHub release into:
+
+```text
+<Vault>/.obsidian/plugins/folder-info/
+```
+
+Restart Obsidian and enable **Folder Info**.
+
 ## License
 
-MIT
+Folder Info is released under the [MIT License](LICENSE).

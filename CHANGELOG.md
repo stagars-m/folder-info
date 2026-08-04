@@ -1,9 +1,13 @@
 # Changelog
 
+## 1.0.1
+
+- Added the complete source tree to the repository package.
+- Added a recognized MIT license at the repository root.
+- Added a committed npm lockfile for reproducible automated builds.
+- Added a GitHub Actions release workflow that builds, tests, creates a draft release, and generates artifact attestations for `main.js` and `styles.css`.
+- Kept runtime behavior unchanged from 1.0.0.
+
 ## 1.0.0
 
 - Initial release.
-- Shows separate file and folder counts beside native File Explorer folders.
-- Supports recursive and direct-child count scopes.
-- Adds toggles for file counts, folder counts, and zero counts.
-- Updates after vault structure changes.

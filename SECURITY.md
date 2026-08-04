@@ -1,13 +1,13 @@
-# Security
+# Security policy
 
-## Design
+## Supported versions
 
-Folder Info has no network functionality, telemetry, analytics, content parsing, vault writes, Node.js APIs, Electron APIs, or runtime dependencies.
+The latest published release is supported.
 
-It reads only Obsidian's in-memory file and folder objects to calculate counts. It does not call `Vault.read()`, `Vault.cachedRead()`, adapter read methods, or write methods.
+## Runtime security properties
 
-The plugin stores four local display preferences through Obsidian's plugin data API.
+Folder Info makes no network requests, collects no telemetry, reads no note or attachment contents, and writes no vault files. It does not use Node.js or Electron APIs at runtime.
 
 ## Reporting a vulnerability
 
-Open a private GitHub security advisory for the repository. Do not include private vault content in a public issue.
+Open a private GitHub security advisory in this repository. Avoid posting sensitive details in a public issue.
