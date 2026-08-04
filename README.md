@@ -1,38 +1,56 @@
-# Folder Info READ ME
+# Folder Info
 
-Folder Info displays file and folder counts next to folders in Obsidian's native File Explorer.
+Folder Info displays separate file and folder counts beside folders in Obsidian's native File Explorer.
+
+Examples:
+
+- `Research (44 files, 16 folders)`
+- `Projects (8 files, 4 folders)`
+- `Empty folder (0 files, 0 folders)`
 
 ## Features
 
-- Shows separate file and folder counts
-- Supports recursive or direct-child counting
-- Updates when the vault structure changes
-- Keeps counters visible when folder names are truncated
-- Preserves normal folder renaming
+- Recursive totals or direct-child totals
+- Independent file and folder count toggles
+- Optional zero counts
+- Optional light-gray shading for the counter
+- Live refresh after create, delete, and rename operations
+- Preserves Obsidian's normal folder rename interface
 
 ## Settings
-
-Folder Info provides the following settings:
 
 - Count all descendants or direct children
 - Show or hide file counts
 - Show or hide folder counts
+- Shade the folder counter in a lighter color
 - Show or hide zero counts
-
-## Installation
-
-Install Folder Info through Obsidian Community Plugins after approval, or use BRAT with this repository.
 
 ## Privacy and security
 
-Folder Info:
+Folder Info makes no network requests, collects no telemetry, does not read note or attachment contents, and does not write to vault files. It reads only Obsidian's in-memory file and folder tree and stores five local display preferences.
 
-- Makes no network requests
-- Collects no telemetry
-- Does not read note or attachment contents
-- Does not modify vault files
-- Stores only local display preferences
+## Source and build
+
+The complete plugin source is the root-level [`main.ts`](main.ts). It intentionally uses JavaScript-compatible TypeScript so the deterministic build has no third-party dependencies.
+
+```bash
+npm ci
+npm run build
+npm test
+```
+
+`npm run build` executes the root-level `build.mjs` and creates `main.js` from `main.ts`.
+
+## Release files
+
+Each GitHub release must attach these files individually:
+
+- `main.js`
+- `manifest.json`
+- `styles.css`
+
+The release tag must exactly match the version in `manifest.json`.
 
 ## License
 
-Released under the MIT License.
+MIT

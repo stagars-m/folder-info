@@ -18,7 +18,15 @@
 .folder-info-count {
   flex: 0 0 auto;
   margin-left: 0.38em;
-  color: var(--text-muted);
+  color: inherit;
+  opacity: 1;
   font-size: var(--font-ui-smaller);
   white-space: nowrap;
+}
+
+
+/* Optional muted presentation controlled by the Shade folder info setting. */
+.folder-info-shaded .folder-info-count {
+  color: var(--text-muted);
+  opacity: 0.82;
 }

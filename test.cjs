@@ -118,6 +118,7 @@ test("normalizes missing and partial settings safely", () => {
     showFiles: true,
     showFolders: true,
     showZeroCounts: true,
+    shadeFolderInfo: true,
   });
 
   assert.deepEqual(
@@ -127,6 +128,7 @@ test("normalizes missing and partial settings safely", () => {
       showFiles: true,
       showFolders: false,
       showZeroCounts: true,
+      shadeFolderInfo: true,
     },
   );
 });
@@ -139,4 +141,20 @@ test("formats an empty label when both count types are disabled", () => {
     ),
     "",
   );
+});
+
+
+test("can disable folder info shading", () => {
+  assert.equal(
+    PluginClass.normalizeSettings({ shadeFolderInfo: false }).shadeFolderInfo,
+    false,
+  );
+});
+
+test("CSS shades counters only when the setting class is present", () => {
+  const fs = require("node:fs");
+  const css = fs.readFileSync("styles.css", "utf8");
+
+  assert.match(css, /folder-info-count[\s\S]*color:\s*inherit/);
+  assert.match(css, /folder-info-shaded \.folder-info-count[\s\S]*color:\s*var\(--text-muted\)/);
 });
