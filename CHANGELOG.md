@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.6
+
+- Show the complete folder name in a native hover tooltip when the appended folder counter causes the name to truncate.
+- Add a default-enabled setting to turn the truncated-name tooltip on or off.
+- Preserve and restore any pre-existing native tooltip during refresh, rename, disable, and cleanup.
+- Preserve all 1.0.5 counter cleanup, spacing, counting, styling, and rename behavior.
+
 ## 1.0.5
 
 - Remove duplicate counters and folder-name wrappers left in the File Explorer DOM by older Folder Info versions.

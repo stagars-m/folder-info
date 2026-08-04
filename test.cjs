@@ -151,6 +151,7 @@ test("normalizes missing and partial settings safely", () => {
     showFolders: true,
     showZeroCounts: true,
     shadeFolderInfo: true,
+    showTooltip: true,
   });
 
   assert.deepEqual(
@@ -161,6 +162,7 @@ test("normalizes missing and partial settings safely", () => {
       showFolders: false,
       showZeroCounts: true,
       shadeFolderInfo: true,
+      showTooltip: true,
     },
   );
 });
@@ -198,6 +200,35 @@ test("formats an empty label when both count types are disabled", () => {
 test("can disable folder info shading", () => {
   assert.equal(
     PluginClass.normalizeSettings({ shadeFolderInfo: false }).shadeFolderInfo,
+    false,
+  );
+});
+
+test("can disable the truncated-name tooltip", () => {
+  assert.equal(
+    PluginClass.normalizeSettings({ showTooltip: false }).showTooltip,
+    false,
+  );
+});
+
+test("extracts the final folder name from normalized paths", () => {
+  assert.equal(PluginClass.folderNameFromPath("Research/Nested"), "Nested");
+  assert.equal(PluginClass.folderNameFromPath("Research\\Nested"), "Nested");
+  assert.equal(PluginClass.folderNameFromPath("Agent"), "Agent");
+  assert.equal(PluginClass.folderNameFromPath(""), "");
+});
+
+test("detects truncation only when rendered content overflows", () => {
+  assert.equal(
+    PluginClass.isContentTruncated({ scrollWidth: 121, clientWidth: 120 }),
+    true,
+  );
+  assert.equal(
+    PluginClass.isContentTruncated({ scrollWidth: 120, clientWidth: 120 }),
+    false,
+  );
+  assert.equal(
+    PluginClass.isContentTruncated({ scrollWidth: 120, clientWidth: 0 }),
     false,
   );
 });
@@ -253,6 +284,8 @@ class FakeElement {
     this.classList = new FakeClassList(classes);
     this._className = classes.join(" ");
     this.textContent = "";
+    this.scrollWidth = 0;
+    this.clientWidth = 0;
   }
   get className() {
     return this._className;
@@ -304,6 +337,13 @@ class FakeElement {
   }
   getAttribute(name) {
     return this.attributes.has(name) ? this.attributes.get(name) : null;
+  }
+  hasAttribute(name) {
+    return this.attributes.has(name);
+  }
+  removeAttribute(name) {
+    this.attributes.delete(name);
+    if (name === "data-path") delete this.dataset.path;
   }
   matches(selector) {
     if (selector.startsWith(".")) {
@@ -429,6 +469,70 @@ test("applyFolderInfo still decorates a visible folder missing from the count in
   } finally {
     global.HTMLElement = previousHTMLElement;
     global.document = previousDocument;
+  }
+});
+
+test("shows the native full-name tooltip only when the folder name is truncated", () => {
+  const previousHTMLElement = global.HTMLElement;
+  const previousDocument = global.document;
+  global.HTMLElement = FakeElement;
+  global.document = { createElement: (tag) => new FakeElement(tag) };
+
+  try {
+    const title = new FakeElement("div", ["nav-folder-title"]);
+    title.setAttribute("data-path", "Projects/A very long folder name");
+    title.setAttribute("title", "Original tooltip");
+    const content = title.appendChild(
+      new FakeElement("div", ["nav-folder-title-content"]),
+    );
+    content.textContent = "A very long folder name";
+    content.scrollWidth = 180;
+    content.clientWidth = 90;
+
+    const plugin = Object.create(PluginClass.prototype);
+    plugin.settings = {
+      countMode: "recursive",
+      showFiles: true,
+      showFolders: true,
+      showZeroCounts: true,
+      shadeFolderInfo: true,
+      showTooltip: true,
+    };
+    plugin.countIndex = new Map();
+
+    plugin.applyFolderInfo(title);
+    assert.equal(title.getAttribute("title"), "A very long folder name");
+    assert.equal(title.dataset.folderInfoTooltipOwned, "true");
+
+    content.scrollWidth = 90;
+    content.clientWidth = 90;
+    plugin.applyFolderInfo(title);
+    assert.equal(title.getAttribute("title"), "Original tooltip");
+    assert.equal(title.dataset.folderInfoTooltipOwned, undefined);
+  } finally {
+    global.HTMLElement = previousHTMLElement;
+    global.document = previousDocument;
+  }
+});
+
+test("clearFolderInfo removes an owned tooltip and restores no-title state", () => {
+  const previousHTMLElement = global.HTMLElement;
+  global.HTMLElement = FakeElement;
+
+  try {
+    const title = new FakeElement("div", ["nav-folder-title"]);
+    title.dataset.folderInfoTooltipOwned = "true";
+    title.dataset.folderInfoHadOriginalTitle = "false";
+    title.dataset.folderInfoOriginalTitle = "";
+    title.setAttribute("title", "Truncated folder");
+
+    const plugin = Object.create(PluginClass.prototype);
+    plugin.clearFolderInfo(title);
+
+    assert.equal(title.hasAttribute("title"), false);
+    assert.equal(title.dataset.folderInfoTooltipOwned, undefined);
+  } finally {
+    global.HTMLElement = previousHTMLElement;
   }
 });
 

@@ -14,6 +14,7 @@ Examples:
 - Independent file and folder count toggles
 - Optional zero counts
 - Optional 30%-opacity shading for the counter
+- Native full-name tooltip when a folder name is truncated by its counter
 - Live refresh after create, delete, and rename operations
 - Preserves Obsidian's normal folder rename interface
 
@@ -23,6 +24,7 @@ Examples:
 - Show or hide file counts
 - Show or hide folder counts
 - Shade the folder counter at 30% opacity
+- Show or hide the full-name tooltip for truncated folders
 - Show or hide zero counts
 
 ## Reliability
@@ -32,10 +34,11 @@ Examples:
 - A non-breaking space guarantees visible separation between the name and counter.
 - Counts are indexed from all loaded vault files and folders, including empty folders.
 - The plugin refreshes folder rows when File Explorer content is mounted, expanded, renamed, created, or deleted.
+- Truncated folder names use the same native hover tooltip style as Full File Extensions, while existing title attributes are preserved.
 
 ## Privacy and security
 
-Folder Info makes no network requests, collects no telemetry, does not read note or attachment contents, and does not write to vault files. It reads only Obsidian's in-memory file and folder tree and stores five local display preferences.
+Folder Info makes no network requests, collects no telemetry, does not read note or attachment contents, and does not write to vault files. It reads only Obsidian's in-memory file and folder tree and stores six local display preferences.
 
 ## Source and build
 

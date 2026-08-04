@@ -12,6 +12,9 @@ const LEGACY_CONTENT_CLASS = "folder-info-content";
 const OWNED_CLASS = "folder-info-owned";
 const SHADE_CLASS = "folder-info-shaded";
 const NON_BREAKING_SPACE = "\u00a0";
+const TOOLTIP_OWNED_DATA = "folderInfoTooltipOwned";
+const TOOLTIP_HAD_ORIGINAL_DATA = "folderInfoHadOriginalTitle";
+const TOOLTIP_ORIGINAL_DATA = "folderInfoOriginalTitle";
 
 const DEFAULT_SETTINGS = Object.freeze({
   countMode: "recursive",
@@ -19,6 +22,7 @@ const DEFAULT_SETTINGS = Object.freeze({
   showFolders: true,
   showZeroCounts: true,
   shadeFolderInfo: true,
+  showTooltip: true,
 });
 
 class FolderInfoPlugin extends Plugin {
@@ -39,6 +43,7 @@ class FolderInfoPlugin extends Plugin {
       showFolders: source.showFolders !== false,
       showZeroCounts: source.showZeroCounts !== false,
       shadeFolderInfo: source.shadeFolderInfo !== false,
+      showTooltip: source.showTooltip !== false,
     };
   }
 
@@ -51,6 +56,23 @@ class FolderInfoPlugin extends Plugin {
     const normalized = FolderInfoPlugin.normalizeVaultPath(path);
     const separator = normalized.lastIndexOf("/");
     return separator < 0 ? "" : normalized.slice(0, separator);
+  }
+
+  static folderNameFromPath(path) {
+    const normalized = FolderInfoPlugin.normalizeVaultPath(path);
+    if (!normalized) return "";
+    const separator = normalized.lastIndexOf("/");
+    return separator < 0 ? normalized : normalized.slice(separator + 1);
+  }
+
+  static isContentTruncated(content) {
+    if (!content || typeof content !== "object") return false;
+    const scrollWidth = Number(content.scrollWidth);
+    const clientWidth = Number(content.clientWidth);
+    return Number.isFinite(scrollWidth) &&
+      Number.isFinite(clientWidth) &&
+      clientWidth > 0 &&
+      scrollWidth > clientWidth;
   }
 
   static isFolderLike(entry) {
@@ -446,6 +468,52 @@ class FolderInfoPlugin extends Plugin {
 
     title.classList.add(OWNED_CLASS);
     title.classList.toggle(SHADE_CLASS, this.settings.shadeFolderInfo);
+
+    const folderName =
+      FolderInfoPlugin.folderNameFromPath(path) || content.textContent?.trim() || "";
+    this.applyTooltip(title, content, folderName);
+  }
+
+  applyTooltip(title, content, folderName) {
+    const shouldShow =
+      this.settings.showTooltip !== false &&
+      folderName !== "" &&
+      FolderInfoPlugin.isContentTruncated(content);
+
+    if (!shouldShow) {
+      this.restoreTooltip(title);
+      return;
+    }
+
+    if (title.dataset[TOOLTIP_OWNED_DATA] !== "true") {
+      title.dataset[TOOLTIP_OWNED_DATA] = "true";
+      title.dataset[TOOLTIP_HAD_ORIGINAL_DATA] = title.hasAttribute("title")
+        ? "true"
+        : "false";
+      title.dataset[TOOLTIP_ORIGINAL_DATA] = title.getAttribute("title") ?? "";
+    }
+
+    if (title.getAttribute("title") !== folderName) {
+      title.setAttribute("title", folderName);
+    }
+  }
+
+  restoreTooltip(title) {
+    if (!(title instanceof HTMLElement)) return;
+    if (title.dataset[TOOLTIP_OWNED_DATA] !== "true") return;
+
+    if (title.dataset[TOOLTIP_HAD_ORIGINAL_DATA] === "true") {
+      title.setAttribute(
+        "title",
+        title.dataset[TOOLTIP_ORIGINAL_DATA] ?? "",
+      );
+    } else {
+      title.removeAttribute("title");
+    }
+
+    delete title.dataset[TOOLTIP_OWNED_DATA];
+    delete title.dataset[TOOLTIP_HAD_ORIGINAL_DATA];
+    delete title.dataset[TOOLTIP_ORIGINAL_DATA];
   }
 
   clearFolderInfo(title) {
@@ -454,6 +522,7 @@ class FolderInfoPlugin extends Plugin {
     // Remove current counters, duplicate counters, and the nested counter/name
     // wrappers used by v1.0.3. Repeated cleanup is safe.
     FolderInfoPlugin.cleanLegacyMarkup(title, false);
+    this.restoreTooltip(title);
     title.classList.remove(OWNED_CLASS, SHADE_CLASS);
   }
 
@@ -516,6 +585,15 @@ class FolderInfoSettingTab extends PluginSettingTab {
         toggle
           .setValue(this.plugin.settings.shadeFolderInfo)
           .onChange((value) => this.plugin.updateSetting("shadeFolderInfo", value)),
+      );
+
+    new Setting(containerEl)
+      .setName("Show full folder name on hover")
+      .setDesc("Show a native tooltip when the folder name is shortened by the counter.")
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.showTooltip)
+          .onChange((value) => this.plugin.updateSetting("showTooltip", value)),
       );
 
     new Setting(containerEl)
