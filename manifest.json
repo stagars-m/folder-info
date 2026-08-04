@@ -1,7 +1,7 @@
 {
   "id": "folder-info",
   "name": "Folder Info",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "minAppVersion": "1.4.0",
   "description": "Shows separate file and folder counts beside folders in the native File Explorer.",
   "author": "stagars-m",

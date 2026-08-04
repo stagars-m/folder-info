@@ -1,64 +1,47 @@
 # Folder Info
 
-Folder Info adds separate file and folder counts beside each folder in Obsidian's native File Explorer.
+Folder Info displays separate file and folder counts beside folders in Obsidian's native File Explorer.
 
-```text
-Research (44 files, 16 folders)
-```
+Examples:
+
+- `Research (44 files, 16 folders)`
+- `Projects (8 files, 4 folders)`
+- `Empty folder (0 files, 0 folders)`
 
 ## Features
 
-- Counts files and folders separately.
-- Supports recursive totals or direct-child totals.
-- Can show only files, only folders, or both.
-- Can hide zero counts.
-- Updates after files or folders are created, deleted, or renamed.
-- Keeps the normal inline folder rename field unchanged.
+- Recursive totals or direct-child totals
+- Independent file and folder count toggles
+- Optional zero counts
+- Live refresh after create, delete, and rename operations
+- Preserves Obsidian's normal folder rename interface
 
 ## Privacy and security
 
-Folder Info:
+Folder Info makes no network requests, collects no telemetry, does not read note or attachment contents, and does not write to vault files. It reads only Obsidian's in-memory file and folder tree and stores four local display preferences.
 
-- makes no network requests;
-- collects no telemetry;
-- does not read note or attachment contents;
-- does not write to vault files;
-- does not use Node.js or Electron APIs at runtime;
-- stores only four local display preferences.
+## Source and build
 
-The plugin reads Obsidian's in-memory vault tree to count `TFile` and `TFolder` objects and changes only File Explorer presentation.
-
-## Source and reproducible build
-
-The complete source is in [`src/main.js`](src/main.js). The build is deterministic and has no runtime or build dependencies.
+The complete plugin source is the root-level [`main.ts`](main.ts). It intentionally uses JavaScript-compatible TypeScript so the deterministic build has no third-party dependencies.
 
 ```bash
 npm ci
-npm run check
+npm run build
+npm test
 ```
 
-`package-lock.json` is committed so automated review can reproduce the build. GitHub releases are created by `.github/workflows/release.yml`, which builds from the tagged commit and generates GitHub artifact attestations for `main.js` and `styles.css`.
+`npm run build` executes the root-level `build.mjs` and creates `main.js` from `main.ts`.
 
-## Installation
+## Release files
 
-### BRAT
+Each GitHub release must attach these files individually:
 
-Add:
+- `main.js`
+- `manifest.json`
+- `styles.css`
 
-```text
-https://github.com/stagars-m/folder-info
-```
-
-### Manual
-
-Copy `main.js`, `manifest.json`, and `styles.css` from a GitHub release into:
-
-```text
-<Vault>/.obsidian/plugins/folder-info/
-```
-
-Restart Obsidian and enable **Folder Info**.
+The release tag must exactly match the version in `manifest.json`.
 
 ## License
 
-Folder Info is released under the [MIT License](LICENSE).
+MIT

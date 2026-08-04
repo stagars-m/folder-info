@@ -1,19 +1,23 @@
-# Upload checklist for 1.0.1
+# Upload checklist for v1.0.2
 
-Upload every file and folder in this repository package to the root of `stagars-m/folder-info`, including hidden `.github`.
+The previous review commit was missing the nested `src/` and `scripts/` directories. Version 1.0.2 places the two required files at the repository root to make incomplete uploads obvious.
 
-Before releasing, the GitHub Code tab must show:
+After uploading, the GitHub **Code** page must visibly show all of these files at the top level:
 
-- `.github/workflows/release.yml`
-- `src/main.js`
-- `tests/plugin.test.cjs`
-- `scripts/build.mjs`
+- `main.ts`
+- `build.mjs`
 - `package.json`
 - `package-lock.json`
-- `LICENSE`
-- `README.md`
 - `manifest.json`
 - `styles.css`
-- `versions.json`
+- `LICENSE`
 
-Do not manually upload release assets for 1.0.1. Use **Actions → Release Obsidian plugin → Run workflow**. Enter `1.0.1`. The workflow creates a draft release with attested assets. Review it, then publish it.
+Before creating the release, open GitHub's web editor or clone the repository and verify:
+
+```bash
+npm ci
+npm run build
+npm test
+```
+
+Create release `1.0.2` only after the files above are present in the commit that the tag will reference.
