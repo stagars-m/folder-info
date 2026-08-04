@@ -28,5 +28,5 @@
 /* Optional muted presentation controlled by the Shade folder info setting. */
 .folder-info-shaded .folder-info-count {
   color: var(--text-muted);
-  opacity: 0.82;
+  opacity: 0.50;
 }
