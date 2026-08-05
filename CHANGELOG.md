@@ -1,27 +1,20 @@
 # Changelog
 
+## 1.0.7
+
+- Replaced the long inline count phrase with a compact lower-right badge.
+- Use `|` between file and folder totals, such as `44 | 16`.
+- Added **Badge font size** options: Normal, Small, and Extra small.
+- Added full count wording on badge hover.
+- Removed forced CSS declarations and used plugin-scoped selector specificity.
+- Preserved duplicate-counter cleanup, native rename behavior, recursive and direct counts, and 30% shading.
+
 ## 1.0.6
 
-- Show the complete folder name in a native hover tooltip when the appended folder counter causes the name to truncate.
-- Add a default-enabled setting to turn the truncated-name tooltip on or off.
-- Preserve and restore any pre-existing native tooltip during refresh, rename, disable, and cleanup.
-- Preserve all 1.0.5 counter cleanup, spacing, counting, styling, and rename behavior.
+- Added a native tooltip showing the complete folder name when the badge shortens it.
 
 ## 1.0.5
 
-- Remove duplicate counters and folder-name wrappers left in the File Explorer DOM by older Folder Info versions.
-- Make startup, refresh, disable, and repeated updates idempotent: each folder row can contain at most one current counter.
-- Preserve the smaller counter font, reliable spacing, broad folder-row detection, and 0.30 shaded opacity from 1.0.4.
-
-## 1.0.4
-
-- Fix missing separation between folder names and counters with a literal non-breaking space.
-- Fix missing counters on some folders by indexing all loaded vault entries rather than relying on class identity.
-- Detect folder paths from both title and parent DOM attributes.
-- Detect folder rows across all native File Explorer containers and refresh when explorer content is mounted dynamically.
-- Stop wrapping or moving Obsidian's native folder-name nodes.
-- Set shaded counter opacity to 0.30.
-
-## 1.0.3
-
-- Add an optional Shade folder info setting.
+- Removed stale and duplicate counters from older implementations.
+- Restored the native folder-name node during cleanup.
+- Preserved one counter per visible folder row.

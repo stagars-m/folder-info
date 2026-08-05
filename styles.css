@@ -1,31 +1,53 @@
 /* Folder Info changes File Explorer presentation only. */
 
-.nav-folder-title.folder-info-owned {
+body .workspace-leaf-content[data-type="file-explorer"] .nav-folder-title.folder-info-owned,
+body .nav-files-container .nav-folder-title.folder-info-owned {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   min-width: 0;
 }
 
-.nav-folder-title.folder-info-owned .nav-folder-title-content {
-  flex: 0 1 auto !important;
-  min-width: 0 !important;
+body .workspace-leaf-content[data-type="file-explorer"] .nav-folder-title.folder-info-owned .nav-folder-title-content,
+body .nav-files-container .nav-folder-title.folder-info-owned .nav-folder-title-content {
+  flex: 1 1 auto;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.nav-folder-title.folder-info-owned > .folder-info-count {
-  flex: 0 0 auto !important;
-  margin: 0 !important;
-  padding: 0 !important;
+body .workspace-leaf-content[data-type="file-explorer"] .nav-folder-title.folder-info-owned > .folder-info-count,
+body .nav-files-container .nav-folder-title.folder-info-owned > .folder-info-count {
+  align-self: flex-end;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-inline-start: 0.35em;
+  padding: 0.08em 0.38em;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 0.45em;
+  background: var(--background-modifier-hover);
   color: inherit;
-  opacity: 1;
-  font-size: var(--font-ui-smaller);
-  white-space: pre;
+  line-height: 1.15;
+  white-space: nowrap;
+  pointer-events: auto;
+}
+
+body .nav-folder-title.folder-info-font-normal > .folder-info-count {
+  font-size: 1em;
+}
+
+body .nav-folder-title.folder-info-font-small > .folder-info-count {
+  font-size: 0.7em;
+}
+
+body .nav-folder-title.folder-info-font-extra-small > .folder-info-count {
+  font-size: 0.5em;
 }
 
 /* Optional muted presentation controlled by the Shade folder info setting. */
-.nav-folder-title.folder-info-shaded > .folder-info-count {
+body .nav-folder-title.folder-info-shaded > .folder-info-count {
   color: var(--text-muted);
   opacity: 0.30;
 }

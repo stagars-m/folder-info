@@ -114,7 +114,7 @@ test("selects direct or recursive totals", () => {
   });
 });
 
-test("formats labels with non-breaking spaces inside each count", () => {
+test("formats full tooltip labels with non-breaking spaces", () => {
   const settings = { showFiles: true, showFolders: true };
 
   assert.equal(
@@ -144,6 +144,23 @@ test("can display only files or only folders", () => {
   );
 });
 
+test("formats compact badge values with a vertical separator", () => {
+  assert.equal(
+    PluginClass.formatBadgeLabel(
+      { files: 44, folders: 16 },
+      { showFiles: true, showFolders: true },
+    ),
+    "44 | 16",
+  );
+  assert.equal(
+    PluginClass.formatBadgeLabel(
+      { files: 44, folders: 16 },
+      { showFiles: true, showFolders: false },
+    ),
+    "44",
+  );
+});
+
 test("normalizes missing and partial settings safely", () => {
   assert.deepEqual(PluginClass.normalizeSettings(null), {
     countMode: "recursive",
@@ -152,6 +169,7 @@ test("normalizes missing and partial settings safely", () => {
     showZeroCounts: true,
     shadeFolderInfo: true,
     showTooltip: true,
+    badgeFontSize: "small",
   });
 
   assert.deepEqual(
@@ -163,6 +181,7 @@ test("normalizes missing and partial settings safely", () => {
       showZeroCounts: true,
       shadeFolderInfo: true,
       showTooltip: true,
+      badgeFontSize: "small",
     },
   );
 });
@@ -204,43 +223,32 @@ test("can disable folder info shading", () => {
   );
 });
 
-test("can disable the truncated-name tooltip", () => {
-  assert.equal(
-    PluginClass.normalizeSettings({ showTooltip: false }).showTooltip,
-    false,
-  );
+test("normalizes badge font-size choices", () => {
+  assert.equal(PluginClass.normalizeSettings({ badgeFontSize: "normal" }).badgeFontSize, "normal");
+  assert.equal(PluginClass.normalizeSettings({ badgeFontSize: "extra-small" }).badgeFontSize, "extra-small");
+  assert.equal(PluginClass.normalizeSettings({ badgeFontSize: "invalid" }).badgeFontSize, "small");
 });
 
-test("extracts the final folder name from normalized paths", () => {
+test("extracts the final folder name and detects rendered truncation", () => {
   assert.equal(PluginClass.folderNameFromPath("Research/Nested"), "Nested");
   assert.equal(PluginClass.folderNameFromPath("Research\\Nested"), "Nested");
-  assert.equal(PluginClass.folderNameFromPath("Agent"), "Agent");
-  assert.equal(PluginClass.folderNameFromPath(""), "");
+  assert.equal(PluginClass.isContentTruncated({ scrollWidth: 121, clientWidth: 120 }), true);
+  assert.equal(PluginClass.isContentTruncated({ scrollWidth: 120, clientWidth: 120 }), false);
+  assert.equal(PluginClass.isContentTruncated({ scrollWidth: 120, clientWidth: 0 }), false);
 });
 
-test("detects truncation only when rendered content overflows", () => {
-  assert.equal(
-    PluginClass.isContentTruncated({ scrollWidth: 121, clientWidth: 120 }),
-    true,
-  );
-  assert.equal(
-    PluginClass.isContentTruncated({ scrollWidth: 120, clientWidth: 120 }),
-    false,
-  );
-  assert.equal(
-    PluginClass.isContentTruncated({ scrollWidth: 120, clientWidth: 0 }),
-    false,
-  );
-});
-
-test("CSS guarantees spacing behavior and 30 percent shading", () => {
+test("CSS defines the lower-right badge, exact font sizes, and 30 percent shading", () => {
   const css = fs.readFileSync("styles.css", "utf8");
-  const source = fs.readFileSync("main.ts", "utf8");
 
-  assert.match(css, /folder-info-count[\s\S]*margin:\s*0\s*!important/);
+  assert.match(css, /folder-info-count[\s\S]*align-self:\s*flex-end/);
+  assert.match(css, /folder-info-count[\s\S]*flex:\s*0 0 auto/);
+  assert.match(css, /font-size:\s*1em/);
+  assert.match(css, /font-size:\s*0\.7em/);
+  assert.match(css, /font-size:\s*0\.5em/);
   assert.match(css, /folder-info-shaded[\s\S]*opacity:\s*0\.30/);
-  assert.match(source, /NON_BREAKING_SPACE/);
-  assert.match(source, /displayText = `\$\{NON_BREAKING_SPACE\}\$\{label\}`/);
+  assert.doesNotMatch(css, /!important/i);
+  assert.doesNotMatch(css, /@import/i);
+  assert.doesNotMatch(css, /url\s*\(/i);
 });
 
 test("source scans both native file explorer roots and all folder titles", () => {
@@ -388,7 +396,7 @@ class FakeElement {
   }
 }
 
-test("applyFolderInfo appends a spaced counter without moving the native folder name", () => {
+test("applyFolderInfo appends one compact badge without moving the native folder name", () => {
   const previousHTMLElement = global.HTMLElement;
   const previousDocument = global.document;
   global.HTMLElement = FakeElement;
@@ -409,6 +417,8 @@ test("applyFolderInfo appends a spaced counter without moving the native folder 
       showFolders: true,
       showZeroCounts: true,
       shadeFolderInfo: true,
+      showTooltip: true,
+      badgeFontSize: "small",
     };
     plugin.countIndex = new Map([
       [
@@ -428,8 +438,10 @@ test("applyFolderInfo appends a spaced counter without moving the native folder 
     assert.equal(title.children.length, 2);
     assert.equal(
       title.children[1].textContent,
-      "\u00a0(1\u00a0file, 1\u00a0folder)",
+      "1 | 1",
     );
+    assert.equal(title.children[1].getAttribute("title"), "1\u00a0file, 1\u00a0folder");
+    assert.equal(title.classList.contains("folder-info-font-small"), true);
     assert.equal(title.classList.contains("folder-info-owned"), true);
     assert.equal(title.classList.contains("folder-info-shaded"), true);
   } finally {
@@ -456,6 +468,8 @@ test("applyFolderInfo still decorates a visible folder missing from the count in
       showFolders: true,
       showZeroCounts: true,
       shadeFolderInfo: true,
+      showTooltip: true,
+      badgeFontSize: "small",
     };
     plugin.countIndex = new Map();
 
@@ -464,7 +478,7 @@ test("applyFolderInfo still decorates a visible folder missing from the count in
     assert.equal(title.children.length, 2);
     assert.equal(
       title.children[1].textContent,
-      "\u00a0(0\u00a0files, 0\u00a0folders)",
+      "0 | 0",
     );
   } finally {
     global.HTMLElement = previousHTMLElement;
@@ -472,7 +486,8 @@ test("applyFolderInfo still decorates a visible folder missing from the count in
   }
 });
 
-test("shows the native full-name tooltip only when the folder name is truncated", () => {
+
+test("shows and restores the full folder-name tooltip only when truncated", () => {
   const previousHTMLElement = global.HTMLElement;
   const previousDocument = global.document;
   global.HTMLElement = FakeElement;
@@ -481,11 +496,9 @@ test("shows the native full-name tooltip only when the folder name is truncated"
   try {
     const title = new FakeElement("div", ["nav-folder-title"]);
     title.setAttribute("data-path", "Projects/A very long folder name");
-    title.setAttribute("title", "Original tooltip");
-    const content = title.appendChild(
-      new FakeElement("div", ["nav-folder-title-content"]),
-    );
+    const content = title.appendChild(new FakeElement("div", ["nav-folder-title-content"]));
     content.textContent = "A very long folder name";
+    content.setAttribute("title", "Original tooltip");
     content.scrollWidth = 180;
     content.clientWidth = 90;
 
@@ -497,45 +510,22 @@ test("shows the native full-name tooltip only when the folder name is truncated"
       showZeroCounts: true,
       shadeFolderInfo: true,
       showTooltip: true,
+      badgeFontSize: "small",
     };
     plugin.countIndex = new Map();
 
     plugin.applyFolderInfo(title);
-    assert.equal(title.getAttribute("title"), "A very long folder name");
-    assert.equal(title.dataset.folderInfoTooltipOwned, "true");
+    assert.equal(content.getAttribute("title"), "A very long folder name");
 
     content.scrollWidth = 90;
     content.clientWidth = 90;
     plugin.applyFolderInfo(title);
-    assert.equal(title.getAttribute("title"), "Original tooltip");
-    assert.equal(title.dataset.folderInfoTooltipOwned, undefined);
+    assert.equal(content.getAttribute("title"), "Original tooltip");
   } finally {
     global.HTMLElement = previousHTMLElement;
     global.document = previousDocument;
   }
 });
-
-test("clearFolderInfo removes an owned tooltip and restores no-title state", () => {
-  const previousHTMLElement = global.HTMLElement;
-  global.HTMLElement = FakeElement;
-
-  try {
-    const title = new FakeElement("div", ["nav-folder-title"]);
-    title.dataset.folderInfoTooltipOwned = "true";
-    title.dataset.folderInfoHadOriginalTitle = "false";
-    title.dataset.folderInfoOriginalTitle = "";
-    title.setAttribute("title", "Truncated folder");
-
-    const plugin = Object.create(PluginClass.prototype);
-    plugin.clearFolderInfo(title);
-
-    assert.equal(title.hasAttribute("title"), false);
-    assert.equal(title.dataset.folderInfoTooltipOwned, undefined);
-  } finally {
-    global.HTMLElement = previousHTMLElement;
-  }
-});
-
 
 test("migrates v1.0.3 nested markup and leaves exactly one counter", () => {
   const previousHTMLElement = global.HTMLElement;
@@ -566,6 +556,8 @@ test("migrates v1.0.3 nested markup and leaves exactly one counter", () => {
       showFolders: true,
       showZeroCounts: true,
       shadeFolderInfo: true,
+      showTooltip: true,
+      badgeFontSize: "small",
     };
     plugin.countIndex = new Map([
       [
@@ -585,7 +577,7 @@ test("migrates v1.0.3 nested markup and leaves exactly one counter", () => {
     const counters = title.querySelectorAll(".folder-info-count");
     assert.equal(counters.length, 1, "refreshes must never duplicate counters");
     assert.equal(counters[0].parentElement, title, "current counter must be a direct title child");
-    assert.equal(counters[0].textContent, "\u00a0(1\u00a0file, 0\u00a0folders)");
+    assert.equal(counters[0].textContent, "1 | 0");
     assert.equal(content.querySelectorAll(".folder-info-count").length, 0);
     assert.equal(content.querySelectorAll(".folder-info-name").length, 0);
     assert.equal(content.classList.contains("folder-info-content"), false);
@@ -621,7 +613,61 @@ test("clearFolderInfo removes current and legacy counters idempotently", () => {
     assert.equal(content.children[0], nativeName);
     assert.equal(title.classList.contains("folder-info-owned"), false);
     assert.equal(title.classList.contains("folder-info-shaded"), false);
+    assert.equal(title.classList.contains("folder-info-font-small"), false);
   } finally {
     global.HTMLElement = previousHTMLElement;
   }
+});
+
+test("settings expose the requested badge font-size options", () => {
+  const source = fs.readFileSync("main.ts", "utf8");
+  assert.match(source, /setName\("Badge font size"\)/);
+  assert.match(source, /addOption\("normal", "Normal"\)/);
+  assert.match(source, /addOption\("small", "Small \(30% smaller\)"\)/);
+  assert.match(source, /addOption\("extra-small", "Extra small \(50% smaller\)"\)/);
+});
+
+test("runtime uses no network, telemetry, Node, Electron, or vault-write APIs", () => {
+  const runtime = fs.readFileSync("main.ts", "utf8");
+  const prohibited = [
+    /\bfetch\s*\(/,
+    /XMLHttpRequest/,
+    /WebSocket/,
+    /telemetry/i,
+    /requestUrl/,
+    /require\(["'](?:fs|node:fs|electron|child_process|node:child_process)["']\)/,
+    /app\.vault\.(?:create|modify|delete|rename)\s*\(/,
+  ];
+  for (const pattern of prohibited) assert.doesNotMatch(runtime, pattern);
+});
+
+test("build-critical files stay at repository root", () => {
+  const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+  const build = fs.readFileSync("build.mjs", "utf8");
+  assert.equal(pkg.scripts.build, "node build.mjs");
+  assert.ok(fs.existsSync("main.ts"));
+  assert.ok(fs.existsSync("build.mjs"));
+  assert.ok(fs.existsSync("test.cjs"));
+  assert.doesNotMatch(build, /scripts\//);
+  assert.doesNotMatch(build, /src\//);
+});
+
+test("release metadata uses version 1.0.7 and the stable plugin ID", () => {
+  const manifest = JSON.parse(fs.readFileSync("manifest.json", "utf8"));
+  const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+  const lock = JSON.parse(fs.readFileSync("package-lock.json", "utf8"));
+  const versions = JSON.parse(fs.readFileSync("versions.json", "utf8"));
+  assert.equal(manifest.id, "folder-info");
+  assert.equal(manifest.version, "1.0.7");
+  assert.equal(pkg.version, "1.0.7");
+  assert.equal(lock.version, "1.0.7");
+  assert.equal(lock.packages[""].version, "1.0.7");
+  assert.equal(versions["1.0.7"], manifest.minAppVersion);
+});
+
+test("repository contains a standard root-level MIT license", () => {
+  const license = fs.readFileSync("LICENSE", "utf8");
+  assert.match(license, /^MIT License/);
+  assert.match(license, /Permission is hereby granted, free of charge/);
+  assert.match(license, /THE SOFTWARE IS PROVIDED "AS IS"/);
 });

@@ -1,20 +1,22 @@
 # Folder Info
 
-Folder Info displays separate file and folder counts beside folders in Obsidian's native File Explorer.
+Folder Info displays compact file and folder counts in a lower-right badge on folders in Obsidian's native File Explorer.
 
 Examples:
 
-- `Research (44 files, 16 folders)`
-- `Projects (8 files, 4 folders)`
-- `Empty folder (0 files, 0 folders)`
+- `Research  44 | 16`
+- `Projects  8 | 4`
+- `Empty folder  0 | 0`
 
 ## Features
 
 - Recursive totals or direct-child totals
 - Independent file and folder count toggles
 - Optional zero counts
-- Optional 30%-opacity shading for the counter
-- Native full-name tooltip when a folder name is truncated by its counter
+- Compact translucent badge with a `|` separator
+- Badge font sizes: Normal, Small, and Extra small
+- Optional 30%-opacity shading for the badge
+- Full folder name on hover when truncated
 - Live refresh after create, delete, and rename operations
 - Preserves Obsidian's normal folder rename interface
 
@@ -23,22 +25,21 @@ Examples:
 - Count all descendants or direct children
 - Show or hide file counts
 - Show or hide folder counts
-- Shade the folder counter at 30% opacity
-- Show or hide the full-name tooltip for truncated folders
+- Choose Normal, Small, or Extra small badge text
+- Shade the badge at 30% opacity
+- Show the complete folder name on hover when truncated
 - Show or hide zero counts
 
 ## Reliability
 
 - Counters are appended without moving Obsidian's native folder-name nodes.
 - Legacy counters and wrappers from earlier versions are removed automatically, preventing duplicate labels after updates.
-- A non-breaking space guarantees visible separation between the name and counter.
 - Counts are indexed from all loaded vault files and folders, including empty folders.
 - The plugin refreshes folder rows when File Explorer content is mounted, expanded, renamed, created, or deleted.
-- Truncated folder names use the same native hover tooltip style as Full File Extensions, while existing title attributes are preserved.
 
 ## Privacy and security
 
-Folder Info makes no network requests, collects no telemetry, does not read note or attachment contents, and does not write to vault files. It reads only Obsidian's in-memory file and folder tree and stores six local display preferences.
+Folder Info makes no network requests, collects no telemetry, does not read note or attachment contents, and does not write to vault files. It reads only Obsidian's in-memory file and folder tree and stores seven local display preferences.
 
 ## Source and build
 
@@ -65,3 +66,19 @@ The release tag must exactly match the version in `manifest.json`.
 ## License
 
 MIT
+
+## Compact badge
+
+Folder counts appear as a translucent badge such as:
+
+```text
+44 | 16
+```
+
+The first value is the file count and the second is the folder count. Hover the badge for the complete wording, such as `44 files, 16 folders`. Hover a shortened folder name to see its complete name.
+
+Badge font-size options are:
+
+- **Normal**: same size as the folder name.
+- **Small**: 30% smaller, the default.
+- **Extra small**: 50% smaller.
