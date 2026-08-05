@@ -49,5 +49,5 @@ body .nav-folder-title.folder-info-font-extra-small > .folder-info-count {
 /* Optional muted presentation controlled by the Shade folder info setting. */
 body .nav-folder-title.folder-info-shaded > .folder-info-count {
   color: var(--text-muted);
-  opacity: 0.30;
+  opacity: 0.80;
 }
