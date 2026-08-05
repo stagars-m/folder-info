@@ -15,8 +15,7 @@ Examples:
 - Optional zero counts
 - Compact translucent badge with a `|` separator
 - Badge font sizes: Normal, Small, and Extra small
-- Optional 30%-opacity shading for the badge
-- Full folder name on hover when truncated
+- Optional 80%-opacity shading for the badge
 - Live refresh after create, delete, and rename operations
 - Preserves Obsidian's normal folder rename interface
 
@@ -26,8 +25,7 @@ Examples:
 - Show or hide file counts
 - Show or hide folder counts
 - Choose Normal, Small, or Extra small badge text
-- Shade the badge at 30% opacity
-- Show the complete folder name on hover when truncated
+- Shade the badge at 80% opacity
 - Show or hide zero counts
 
 ## Reliability
@@ -39,7 +37,7 @@ Examples:
 
 ## Privacy and security
 
-Folder Info makes no network requests, collects no telemetry, does not read note or attachment contents, and does not write to vault files. It reads only Obsidian's in-memory file and folder tree and stores seven local display preferences.
+Folder Info makes no network requests, collects no telemetry, does not read note or attachment contents, and does not write to vault files. It reads only Obsidian's in-memory file and folder tree and stores six local display preferences.
 
 ## Source and build
 
@@ -75,10 +73,10 @@ Folder counts appear as a translucent badge such as:
 44 | 16
 ```
 
-The first value is the file count and the second is the folder count. Hover the badge for the complete wording, such as `44 files, 16 folders`. Hover a shortened folder name to see its complete name.
+The first value is the file count and the second is the folder count. Folder-name hover behavior remains native to Obsidian; the plugin does not add another popup.
 
 Badge font-size options are:
 
-- **Normal**: same size as the folder name.
+- **Normal**: 90% of the folder-name size.
 - **Small**: 30% smaller, the default.
 - **Extra small**: 50% smaller.

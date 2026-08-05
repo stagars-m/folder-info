@@ -13,9 +13,6 @@ const LEGACY_CONTENT_CLASS = "folder-info-content";
 const OWNED_CLASS = "folder-info-owned";
 const SHADE_CLASS = "folder-info-shaded";
 const NON_BREAKING_SPACE = "\u00a0";
-const TOOLTIP_OWNED_DATA = "folderInfoTooltipOwned";
-const TOOLTIP_HAD_ORIGINAL_DATA = "folderInfoHadOriginalTitle";
-const TOOLTIP_ORIGINAL_DATA = "folderInfoOriginalTitle";
 const FONT_SIZE_CLASSES = Object.freeze([
   "folder-info-font-normal",
   "folder-info-font-small",
@@ -28,7 +25,6 @@ const DEFAULT_SETTINGS = Object.freeze({
   showFolders: true,
   showZeroCounts: true,
   shadeFolderInfo: true,
-  showTooltip: true,
   badgeFontSize: "small",
 });
 
@@ -50,7 +46,6 @@ class FolderInfoPlugin extends Plugin {
       showFolders: source.showFolders !== false,
       showZeroCounts: source.showZeroCounts !== false,
       shadeFolderInfo: source.shadeFolderInfo !== false,
-      showTooltip: source.showTooltip !== false,
       badgeFontSize: ["normal", "small", "extra-small"].includes(source.badgeFontSize)
         ? source.badgeFontSize
         : "small",
@@ -66,23 +61,6 @@ class FolderInfoPlugin extends Plugin {
     const normalized = FolderInfoPlugin.normalizeVaultPath(path);
     const separator = normalized.lastIndexOf("/");
     return separator < 0 ? "" : normalized.slice(0, separator);
-  }
-
-  static folderNameFromPath(path) {
-    const normalized = FolderInfoPlugin.normalizeVaultPath(path);
-    if (!normalized) return "";
-    const separator = normalized.lastIndexOf("/");
-    return separator < 0 ? normalized : normalized.slice(separator + 1);
-  }
-
-  static isContentTruncated(content) {
-    if (!content || typeof content !== "object") return false;
-    const scrollWidth = Number(content.scrollWidth);
-    const clientWidth = Number(content.clientWidth);
-    return Number.isFinite(scrollWidth) &&
-      Number.isFinite(clientWidth) &&
-      clientWidth > 0 &&
-      scrollWidth > clientWidth;
   }
 
   static isFolderLike(entry) {
@@ -478,7 +456,6 @@ class FolderInfoPlugin extends Plugin {
 
     if (info.textContent !== badgeLabel) info.textContent = badgeLabel;
     info.setAttribute("aria-label", fullLabel.slice(1, -1));
-    info.setAttribute("title", fullLabel.slice(1, -1));
 
     title.classList.add(OWNED_CLASS);
     title.classList.toggle(SHADE_CLASS, this.settings.shadeFolderInfo);
@@ -490,47 +467,6 @@ class FolderInfoPlugin extends Plugin {
       : "small";
     title.classList.add(`folder-info-font-${badgeFontSize}`);
 
-    const folderName =
-      FolderInfoPlugin.folderNameFromPath(path) || content.textContent?.trim() || "";
-    this.applyTooltip(content, folderName);
-  }
-
-  applyTooltip(content, folderName) {
-    const shouldShow =
-      this.settings.showTooltip !== false &&
-      folderName !== "" &&
-      FolderInfoPlugin.isContentTruncated(content);
-
-    if (!shouldShow) {
-      this.restoreTooltip(content);
-      return;
-    }
-
-    if (content.dataset[TOOLTIP_OWNED_DATA] !== "true") {
-      content.dataset[TOOLTIP_OWNED_DATA] = "true";
-      content.dataset[TOOLTIP_HAD_ORIGINAL_DATA] = content.hasAttribute("title")
-        ? "true"
-        : "false";
-      content.dataset[TOOLTIP_ORIGINAL_DATA] = content.getAttribute("title") ?? "";
-    }
-    if (content.getAttribute("title") !== folderName) {
-      content.setAttribute("title", folderName);
-    }
-  }
-
-  restoreTooltip(content) {
-    if (!(content instanceof HTMLElement)) return;
-    if (content.dataset[TOOLTIP_OWNED_DATA] !== "true") return;
-
-    if (content.dataset[TOOLTIP_HAD_ORIGINAL_DATA] === "true") {
-      content.setAttribute("title", content.dataset[TOOLTIP_ORIGINAL_DATA] ?? "");
-    } else {
-      content.removeAttribute("title");
-    }
-
-    delete content.dataset[TOOLTIP_OWNED_DATA];
-    delete content.dataset[TOOLTIP_HAD_ORIGINAL_DATA];
-    delete content.dataset[TOOLTIP_ORIGINAL_DATA];
   }
 
   clearFolderInfo(title) {
@@ -538,8 +474,6 @@ class FolderInfoPlugin extends Plugin {
 
     // Remove current counters, duplicate counters, and the nested counter/name
     // wrappers used by v1.0.3. Repeated cleanup is safe.
-    const content = title.querySelector(CONTENT_SELECTOR);
-    if (content instanceof HTMLElement) this.restoreTooltip(content);
     FolderInfoPlugin.cleanLegacyMarkup(title, false);
     title.classList.remove(OWNED_CLASS, SHADE_CLASS, ...FONT_SIZE_CLASSES);
   }
@@ -601,7 +535,7 @@ class FolderInfoSettingTab extends PluginSettingTab {
       .setDesc("Choose the size of the compact file and folder count badge.")
       .addDropdown((dropdown) =>
         dropdown
-          .addOption("normal", "Normal")
+          .addOption("normal", "Normal (90%)")
           .addOption("small", "Small (30% smaller)")
           .addOption("extra-small", "Extra small (50% smaller)")
           .setValue(this.plugin.settings.badgeFontSize)
@@ -609,17 +543,8 @@ class FolderInfoSettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Show full folder name on hover")
-      .setDesc("Show a native tooltip when the badge causes the folder name to be shortened.")
-      .addToggle((toggle) =>
-        toggle
-          .setValue(this.plugin.settings.showTooltip)
-          .onChange((value) => this.plugin.updateSetting("showTooltip", value)),
-      );
-
-    new Setting(containerEl)
       .setName("Shade folder info")
-      .setDesc("Show the counter at 30% opacity. Turn this off to use the normal folder-name color.")
+      .setDesc("Show the counter at 80% opacity. Turn this off to use the normal folder-name color.")
       .addToggle((toggle) =>
         toggle
           .setValue(this.plugin.settings.shadeFolderInfo)

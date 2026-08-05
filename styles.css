@@ -35,7 +35,7 @@ body .nav-files-container .nav-folder-title.folder-info-owned > .folder-info-cou
 }
 
 body .nav-folder-title.folder-info-font-normal > .folder-info-count {
-  font-size: 1em;
+  font-size: 0.9em;
 }
 
 body .nav-folder-title.folder-info-font-small > .folder-info-count {

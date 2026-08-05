@@ -114,7 +114,7 @@ test("selects direct or recursive totals", () => {
   });
 });
 
-test("formats full tooltip labels with non-breaking spaces", () => {
+test("formats full accessible labels with non-breaking spaces", () => {
   const settings = { showFiles: true, showFolders: true };
 
   assert.equal(
@@ -168,7 +168,6 @@ test("normalizes missing and partial settings safely", () => {
     showFolders: true,
     showZeroCounts: true,
     shadeFolderInfo: true,
-    showTooltip: true,
     badgeFontSize: "small",
   });
 
@@ -180,8 +179,7 @@ test("normalizes missing and partial settings safely", () => {
       showFolders: false,
       showZeroCounts: true,
       shadeFolderInfo: true,
-      showTooltip: true,
-      badgeFontSize: "small",
+        badgeFontSize: "small",
     },
   );
 });
@@ -229,26 +227,26 @@ test("normalizes badge font-size choices", () => {
   assert.equal(PluginClass.normalizeSettings({ badgeFontSize: "invalid" }).badgeFontSize, "small");
 });
 
-test("extracts the final folder name and detects rendered truncation", () => {
-  assert.equal(PluginClass.folderNameFromPath("Research/Nested"), "Nested");
-  assert.equal(PluginClass.folderNameFromPath("Research\\Nested"), "Nested");
-  assert.equal(PluginClass.isContentTruncated({ scrollWidth: 121, clientWidth: 120 }), true);
-  assert.equal(PluginClass.isContentTruncated({ scrollWidth: 120, clientWidth: 120 }), false);
-  assert.equal(PluginClass.isContentTruncated({ scrollWidth: 120, clientWidth: 0 }), false);
-});
-
-test("CSS defines the lower-right badge, exact font sizes, and 30 percent shading", () => {
+test("CSS defines the lower-right badge, exact font sizes, and 80 percent shading", () => {
   const css = fs.readFileSync("styles.css", "utf8");
 
   assert.match(css, /folder-info-count[\s\S]*align-self:\s*flex-end/);
   assert.match(css, /folder-info-count[\s\S]*flex:\s*0 0 auto/);
-  assert.match(css, /font-size:\s*1em/);
+  assert.match(css, /font-size:\s*0\.9em/);
   assert.match(css, /font-size:\s*0\.7em/);
   assert.match(css, /font-size:\s*0\.5em/);
-  assert.match(css, /folder-info-shaded[\s\S]*opacity:\s*0\.30/);
+  assert.match(css, /folder-info-shaded[\s\S]*opacity:\s*0\.80/);
   assert.doesNotMatch(css, /!important/i);
   assert.doesNotMatch(css, /@import/i);
   assert.doesNotMatch(css, /url\s*\(/i);
+});
+
+test("plugin leaves native folder tooltips to Obsidian", () => {
+  const source = fs.readFileSync("main.ts", "utf8");
+
+  assert.doesNotMatch(source, /setName\("Show full folder name on hover"\)/);
+  assert.doesNotMatch(source, /setAttribute\("title"/);
+  assert.doesNotMatch(source, /folderInfoTooltipOwned/);
 });
 
 test("source scans both native file explorer roots and all folder titles", () => {
@@ -417,8 +415,7 @@ test("applyFolderInfo appends one compact badge without moving the native folder
       showFolders: true,
       showZeroCounts: true,
       shadeFolderInfo: true,
-      showTooltip: true,
-      badgeFontSize: "small",
+        badgeFontSize: "small",
     };
     plugin.countIndex = new Map([
       [
@@ -440,7 +437,8 @@ test("applyFolderInfo appends one compact badge without moving the native folder
       title.children[1].textContent,
       "1 | 1",
     );
-    assert.equal(title.children[1].getAttribute("title"), "1\u00a0file, 1\u00a0folder");
+    assert.equal(title.children[1].getAttribute("title"), null);
+    assert.equal(title.children[1].getAttribute("aria-label"), "1\u00a0file, 1\u00a0folder");
     assert.equal(title.classList.contains("folder-info-font-small"), true);
     assert.equal(title.classList.contains("folder-info-owned"), true);
     assert.equal(title.classList.contains("folder-info-shaded"), true);
@@ -468,8 +466,7 @@ test("applyFolderInfo still decorates a visible folder missing from the count in
       showFolders: true,
       showZeroCounts: true,
       shadeFolderInfo: true,
-      showTooltip: true,
-      badgeFontSize: "small",
+        badgeFontSize: "small",
     };
     plugin.countIndex = new Map();
 
@@ -486,46 +483,6 @@ test("applyFolderInfo still decorates a visible folder missing from the count in
   }
 });
 
-
-test("shows and restores the full folder-name tooltip only when truncated", () => {
-  const previousHTMLElement = global.HTMLElement;
-  const previousDocument = global.document;
-  global.HTMLElement = FakeElement;
-  global.document = { createElement: (tag) => new FakeElement(tag) };
-
-  try {
-    const title = new FakeElement("div", ["nav-folder-title"]);
-    title.setAttribute("data-path", "Projects/A very long folder name");
-    const content = title.appendChild(new FakeElement("div", ["nav-folder-title-content"]));
-    content.textContent = "A very long folder name";
-    content.setAttribute("title", "Original tooltip");
-    content.scrollWidth = 180;
-    content.clientWidth = 90;
-
-    const plugin = Object.create(PluginClass.prototype);
-    plugin.settings = {
-      countMode: "recursive",
-      showFiles: true,
-      showFolders: true,
-      showZeroCounts: true,
-      shadeFolderInfo: true,
-      showTooltip: true,
-      badgeFontSize: "small",
-    };
-    plugin.countIndex = new Map();
-
-    plugin.applyFolderInfo(title);
-    assert.equal(content.getAttribute("title"), "A very long folder name");
-
-    content.scrollWidth = 90;
-    content.clientWidth = 90;
-    plugin.applyFolderInfo(title);
-    assert.equal(content.getAttribute("title"), "Original tooltip");
-  } finally {
-    global.HTMLElement = previousHTMLElement;
-    global.document = previousDocument;
-  }
-});
 
 test("migrates v1.0.3 nested markup and leaves exactly one counter", () => {
   const previousHTMLElement = global.HTMLElement;
@@ -556,8 +513,7 @@ test("migrates v1.0.3 nested markup and leaves exactly one counter", () => {
       showFolders: true,
       showZeroCounts: true,
       shadeFolderInfo: true,
-      showTooltip: true,
-      badgeFontSize: "small",
+        badgeFontSize: "small",
     };
     plugin.countIndex = new Map([
       [
@@ -622,7 +578,7 @@ test("clearFolderInfo removes current and legacy counters idempotently", () => {
 test("settings expose the requested badge font-size options", () => {
   const source = fs.readFileSync("main.ts", "utf8");
   assert.match(source, /setName\("Badge font size"\)/);
-  assert.match(source, /addOption\("normal", "Normal"\)/);
+  assert.match(source, /addOption\("normal", "Normal \(90%\)"\)/);
   assert.match(source, /addOption\("small", "Small \(30% smaller\)"\)/);
   assert.match(source, /addOption\("extra-small", "Extra small \(50% smaller\)"\)/);
 });
